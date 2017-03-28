@@ -11,6 +11,12 @@ namespace VertigoGame
         Grid grid;
         List<Group> groups;
         public float score = 0;
+
+
+        public Camera camera;
+        Ray ray;
+        RaycastHit hit; 
+
         // Use this for initialization
         void Start()
           {  
@@ -18,12 +24,12 @@ namespace VertigoGame
              boxList = new List<Box>();
              for(int i = 0; i < 25; i++)
              {
-                 Box myBox = new Box(parentTransform, boxMaterial);
+                 Box myBox = new Box(Box.Type.Empty,parentTransform, boxMaterial);
                  boxList.Add(myBox); 
              }
              grid = new Grid(parentTransform,boxList);
-             grid.Execute();
-             GroupBoxes();
+             grid.Execute(); // puts Boxes under parentTransform and 
+             GroupBoxes(); // find groups 
             
              //int myCount = 0; 
              //foreach(Group g in groups)
@@ -182,6 +188,10 @@ namespace VertigoGame
             ClearGroups();
         }
 
+        /// <summary>
+        ///  Set boxes null for new situation
+        ///  Because we are checking boxes the new siuation
+        /// </summary>
         public void ClearGroups()
         {
             groups.Clear();
@@ -192,10 +202,40 @@ namespace VertigoGame
         }
 
 
+        /// <summary>
+        /// Send ray to boxes and find the array number and return as int
+        /// </summary>
+        /// <returns></returns>
+        public int SelectBox()
+        {
+            ray = camera.ScreenPointToRay(Input.mousePosition); //ray from mousePosition to world
+            hit = new RaycastHit();
+            int selectedBox = -1; // there is no any -1 list nummber, it's like null
+
+            if(Physics.Raycast(ray, out hit, Mathf.Infinity))
+            {
+                //this returns 0,1,2,3,4.... multiplier(5) can be changed for new grids. 6*6 - 7*7 something like that
+                selectedBox = (int)(hit.transform.position.x - parentTransform.position.x + (hit.transform.position.y - parentTransform.position.y) * 5);
+               
+            }
+            return selectedBox; 
+        }
         // Update is called once per frame
         void Update()
         {
-            
+            if(Input.GetMouseButtonDown(0))
+            {
+                int selected = SelectBox();
+                if(selected != -1)
+                {
+                    boxList[selected].SetBoxType(Box.Type.Red); // changes selected box type to red
+                    GroupBoxes();
+                }
+            }
+            if(Input.GetMouseButtonUp(0))
+            { 
+                GroupCrusher(); 
+            } 
         }
     }
 }
